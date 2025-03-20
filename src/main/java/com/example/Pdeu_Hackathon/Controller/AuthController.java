@@ -140,14 +140,16 @@ public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest, HttpS
     // Set the token in an HTTP-only cookie
     boolean isLocalEnv = true; // Change to false when deploying frontend
 
+    // ✅ Local Development Settings
     ResponseCookie jwtCookie = ResponseCookie.from("jwt", jwtToken)
             .httpOnly(true) // Prevent JavaScript access
-            .secure(!isLocalEnv) // `false` in local, `true` in production
+            .secure(false) // ❌ No HTTPS in local
             .path("/") // Available on all endpoints
             .maxAge(Duration.ofDays(7)) // Token expiration (7 days)
-            .sameSite(isLocalEnv ? "Lax" : "None") // "Lax" for local, "None" for cross-origin
+            .sameSite("Lax") // ✅ Lax works fine for local
             .build();
 
+    // ✅ Add cookie to response
     response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
 
     // Return the token and user ID in the response
