@@ -6,6 +6,7 @@ import com.example.Pdeu_Hackathon.Service.JWTService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -66,14 +67,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    // Extract JWT token from Authorization header (Bearer <token>)
-    private String extractTokenFromRequest(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            return header.substring(7);
+//    // Extract JWT token from Authorization header (Bearer <token>)
+//    private String extractTokenFromRequest(HttpServletRequest request) {
+//        String header = request.getHeader("Authorization");
+//        if (header != null && header.startsWith("Bearer ")) {
+//            return header.substring(7);
+//        }
+//        return null;
+//    }
+// Extract JWT token from Cookie
+private String extractTokenFromRequest(HttpServletRequest request) {
+    Cookie[] cookies = request.getCookies();
+
+    if (cookies != null) {
+        for (Cookie cookie : cookies) {
+            if ("jwt".equals(cookie.getName())) { // Cookie name must match the one set in login
+                return cookie.getValue();
+            }
         }
-        return null;
     }
+    return null;
+}
+
 
     public String extractEmail(String token) {
         return jwtService.extractClaims(token).getSubject();

@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.*;
 
 @RestController
@@ -83,8 +84,36 @@ public ResponseEntity<Map<String, String>> registerUser(@RequestBody Users user)
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
 }
 
+//@PostMapping("/login")
+//public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
+//    // Find user by username or email
+//    Optional<Users> userOptional = userRepository.findByUsernameOrEmail(loginRequest.getUsernameOrEmail(), loginRequest.getUsernameOrEmail());
+//
+//    if (userOptional.isEmpty()) {
+//        // Return error if user is not found
+//        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("error", "Username or email is not registered"));
+//    }
+//
+//    Users user = userOptional.get();
+//
+//    try {
+//        // Authenticate the user
+//        authenticationManager.authenticate(
+//                new UsernamePasswordAuthenticationToken(loginRequest.getUsernameOrEmail(), loginRequest.getPassword())
+//        );
+//    } catch (BadCredentialsException e) {
+//        // Return error if password is incorrect
+//        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("error", "Your password is incorrect"));
+//    }
+//
+//    // Generate JWT token using JWTService
+//    String jwtToken = jwtService.generateToken(user);
+//
+//    // Return the token and user ID in the response
+//    return ResponseEntity.ok(new LoginResponse(jwtToken, user.getUser_id()));
+//}
 @PostMapping("/login")
-public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
+public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
     // Find user by username or email
     Optional<Users> userOptional = userRepository.findByUsernameOrEmail(loginRequest.getUsernameOrEmail(), loginRequest.getUsernameOrEmail());
 
@@ -108,6 +137,16 @@ public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
     // Generate JWT token using JWTService
     String jwtToken = jwtService.generateToken(user);
 
+    // Set the token in an HTTP-only cookie
+    ResponseCookie jwtCookie = ResponseCookie.from("jwt", jwtToken)
+            .httpOnly(true)       // Prevents JavaScript access for security
+            .secure(true)         // Ensures the cookie is sent over HTTPS
+            .path("/")            // Available for all endpoints
+            .maxAge(Duration.ofDays(7)) // Token expiration (7 days)
+            .sameSite("Strict")   // Prevents CSRF attacks
+            .build();
+
+    response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
     // Return the token and user ID in the response
     return ResponseEntity.ok(new LoginResponse(jwtToken, user.getUser_id()));
 }
