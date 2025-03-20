@@ -115,46 +115,54 @@ public ResponseEntity<Map<String, String>> registerUser(@RequestBody Users user)
 @PostMapping("/login")
 public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
     // Find user by username or email
-    Optional<Users> userOptional = userRepository.findByUsernameOrEmail(loginRequest.getUsernameOrEmail(), loginRequest.getUsernameOrEmail());
+    Optional<Users> userOptional = userRepository.findByUsernameOrEmail(
+            loginRequest.getUsernameOrEmail(), loginRequest.getUsernameOrEmail());
 
     if (userOptional.isEmpty()) {
-        // Return error if user is not found
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("error", "Username or email is not registered"));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Collections.singletonMap("error", "Username or email is not registered"));
     }
 
     Users user = userOptional.get();
 
     try {
-        // Authenticate the user
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsernameOrEmail(), loginRequest.getPassword())
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getUsernameOrEmail(), loginRequest.getPassword())
         );
     } catch (BadCredentialsException e) {
-        // Return error if password is incorrect
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("error", "Your password is incorrect"));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Collections.singletonMap("error", "Your password is incorrect"));
     }
 
     // Generate JWT token using JWTService
     String jwtToken = jwtService.generateToken(user);
 
-    // Set the token in an HTTP-only cookie
+    // Determine environment
     boolean isLocalEnv = true; // Change to false when deploying frontend
 
-    // ✅ Local Development Settings
+    // ✅ Create Cookie
     ResponseCookie jwtCookie = ResponseCookie.from("jwt", jwtToken)
             .httpOnly(true) // Prevent JavaScript access
-            .secure(false) // ❌ No HTTPS in local
+            .secure(!isLocalEnv) // `true` for production, `false` for local
             .path("/") // Available on all endpoints
-            .maxAge(Duration.ofDays(7)) // Token expiration (7 days)
-            .sameSite("None") // ✅ Lax works fine for local
+            .maxAge(Duration.ofDays(7)) // Cookie expires in 7 days
+            .sameSite("None") // ✅ Required for cross-origin requests
             .build();
 
-    // ✅ Add cookie to response
+    // ✅ Add cookie to response headers
     response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
 
-    // Return the token and user ID in the response
-    return ResponseEntity.ok(new LoginResponse(jwtToken, user.getUser_id()));
+    // ✅ Return Cookie in Response JSON (Like Node.js)
+    Map<String, String> responseBody = new HashMap<>();
+    responseBody.put("message", "Login successful");
+    responseBody.put("jwt", jwtToken); // ✅ Return token explicitly
+
+    return ResponseEntity.ok()
+            .header(HttpHeaders.SET_COOKIE, jwtCookie.toString()) // ✅ Include in response headers
+            .body(responseBody); // ✅ Include in response JSON
 }
+
 
 
 
