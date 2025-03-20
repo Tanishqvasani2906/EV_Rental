@@ -146,7 +146,7 @@ public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest, HttpS
             .secure(false) // ❌ No HTTPS in local
             .path("/") // Available on all endpoints
             .maxAge(Duration.ofDays(7)) // Token expiration (7 days)
-            .sameSite("Lax") // ✅ Lax works fine for local
+            .sameSite("None") // ✅ Lax works fine for local
             .build();
 
     // ✅ Add cookie to response
