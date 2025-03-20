@@ -18,6 +18,7 @@ public class WebConfig implements WebMvcConfigurer {
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Allow these methods
                         .allowedHeaders("*")
                         .allowCredentials(true) // Allow credentials if needed
+                        .exposedHeaders("Set-Cookie") // ✅ Allow frontend to access cookies
                         .maxAge(3600); // Cache the preflight response for 1 hour
             }
         };

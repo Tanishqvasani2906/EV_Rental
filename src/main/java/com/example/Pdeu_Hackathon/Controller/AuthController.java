@@ -138,15 +138,18 @@ public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest, HttpS
     String jwtToken = jwtService.generateToken(user);
 
     // Set the token in an HTTP-only cookie
+    boolean isLocalEnv = true; // Change to false when deploying frontend
+
     ResponseCookie jwtCookie = ResponseCookie.from("jwt", jwtToken)
-            .httpOnly(true)       // Prevents JavaScript access for security
-            .secure(true)         // Ensures the cookie is sent over HTTPS
-            .path("/")            // Available for all endpoints
+            .httpOnly(true) // Prevent JavaScript access
+            .secure(!isLocalEnv) // `false` in local, `true` in production
+            .path("/") // Available on all endpoints
             .maxAge(Duration.ofDays(7)) // Token expiration (7 days)
-            .sameSite("Strict")   // Prevents CSRF attacks
+            .sameSite(isLocalEnv ? "Lax" : "None") // "Lax" for local, "None" for cross-origin
             .build();
 
     response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
+
     // Return the token and user ID in the response
     return ResponseEntity.ok(new LoginResponse(jwtToken, user.getUser_id()));
 }
