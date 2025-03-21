@@ -499,4 +499,8 @@ public ResponseEntity<String> handleGoogleCallback(@RequestParam("code") String 
         Users user = userService.getUserById(userId);
         return ResponseEntity.ok(user);
     }
+    @GetMapping("/cron-job")
+    public ResponseEntity<String> cronJob() {
+        return ResponseEntity.ok("keeping-cron-job-alive");
+    }
 }
