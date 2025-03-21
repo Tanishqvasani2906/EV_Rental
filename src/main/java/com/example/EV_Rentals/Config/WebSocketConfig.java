@@ -8,7 +8,7 @@ import org.springframework.web.socket.config.annotation.*;
 public class WebSocketConfig implements WebSocketConfigurer {
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(new RideTrackingHandler(), "/trackRide").setAllowedOrigins("*");
+        registry.addHandler(new RideTrackingHandler(), "/trackRide").setAllowedOrigins("*").withSockJS();
     }
 }
 
