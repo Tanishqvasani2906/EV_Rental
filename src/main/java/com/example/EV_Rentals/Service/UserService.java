@@ -97,6 +97,8 @@ public class UserService {
     }
 
 
-
-
+    public Users getUserById(String userId) {
+        return userRepo.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+    }
 }
