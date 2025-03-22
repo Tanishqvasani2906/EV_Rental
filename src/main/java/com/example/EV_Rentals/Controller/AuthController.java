@@ -9,6 +9,8 @@ import com.example.EV_Rentals.Service.JWTService;
 import com.example.EV_Rentals.Service.UserService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -502,5 +504,9 @@ public ResponseEntity<String> handleGoogleCallback(@RequestParam("code") String 
     @GetMapping("/cron-job")
     public ResponseEntity<String> cronJob() {
         return ResponseEntity.ok("keeping-cron-job-alive");
+    }
+    @GetMapping("/verifytoken")
+    public ResponseEntity<String> verifytoken() {
+       return ResponseEntity.ok("verify-token");
     }
 }
