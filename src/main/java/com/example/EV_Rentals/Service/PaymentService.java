@@ -32,8 +32,9 @@ public class PaymentService {
         long rideDurationMinutes = Duration.between(startTime, expectedReturnTime).toMinutes();
 
         // 🔹 Define pricing (e.g., ₹2 per minute)
-        int farePerMinute = 2;
-        int totalAmount = (int) (rideDurationMinutes * farePerMinute * 100); // Convert to paise
+        double farePerMinute = 1.08;
+        double totalAmount = rideDurationMinutes * farePerMinute * 100; // Convert to paise
+
 
         JSONObject orderRequest = new JSONObject();
         orderRequest.put("amount", totalAmount);
