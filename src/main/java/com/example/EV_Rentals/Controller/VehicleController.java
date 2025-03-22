@@ -1,10 +1,7 @@
 package com.example.EV_Rentals.Controller;
 
 import com.example.EV_Rentals.Dto.VehicleRequestDto;
-import com.example.EV_Rentals.Entity.PenaltyHistory;
-import com.example.EV_Rentals.Entity.Vehicle;
-import com.example.EV_Rentals.Entity.ParkingZone;
-import com.example.EV_Rentals.Entity.RentalStatus;
+import com.example.EV_Rentals.Entity.*;
 import com.example.EV_Rentals.Repository.ParkingZoneRepo;
 import com.example.EV_Rentals.Repository.PenaltyRepo;
 import com.example.EV_Rentals.Repository.VehicleRepo;
@@ -107,30 +104,8 @@ public class VehicleController {
     }
 
     // 🔹 Start a Rental Ride (Change status to RENTED)
-//    @PostMapping("/{vehicleId}/rent")
-//    public ResponseEntity<?> startRide(@PathVariable String vehicleId) {
-//        Optional<Vehicle> vehicleOpt = vehicleRepository.findById(vehicleId);
-//        if (vehicleOpt.isEmpty()) {
-//            return ResponseEntity.badRequest().body("Vehicle not found");
-//        }
-//
-//        Vehicle vehicle = vehicleOpt.get();
-//        if (vehicle.getStatus() != RentalStatus.AVAILABLE) {
-//            return ResponseEntity.badRequest().body("Vehicle is not available for rent");
-//        }
-//
-//        vehicle.setStatus(RentalStatus.RENTED);
-//        vehicle.setRideStartTime(LocalDateTime.now());
-//        vehicle.setExpectedReturnTime(LocalDateTime.now().plusHours(1));
-//        vehicle.setCurrentParkingZone(null); // Remove from parking since it's being rented
-//        vehicleRepository.save(vehicle);
-//        return ResponseEntity.ok("Ride started successfully");
-//    }
-    @PostMapping("/{vehicleId}/request-ride")
-    public ResponseEntity<?> requestRide(@PathVariable String vehicleId, Principal principal) {
-        // 🔹 Get logged-in user email from authentication
-        String userEmail = principal.getName();
-
+    @PostMapping("/{vehicleId}/rent")
+    public ResponseEntity<?> startRide(@PathVariable String vehicleId) {
         Optional<Vehicle> vehicleOpt = vehicleRepository.findById(vehicleId);
         if (vehicleOpt.isEmpty()) {
             return ResponseEntity.badRequest().body("Vehicle not found");
@@ -141,43 +116,70 @@ public class VehicleController {
             return ResponseEntity.badRequest().body("Vehicle is not available for rent");
         }
 
-        vehicle.setStatus(RentalStatus.PENDING_PAYMENT);
+        vehicle.setStatus(RentalStatus.RENTED);
         vehicle.setRideStartTime(LocalDateTime.now());
         vehicle.setExpectedReturnTime(LocalDateTime.now().plusHours(1));
+        vehicle.setCurrentParkingZone(null); // Remove from parking since it's being rented
         vehicleRepository.save(vehicle);
-
-        try {
-            // 🔹 Call Razorpay Payment API
-            String orderResponse = paymentService.createPaymentOrder(vehicle.getRideStartTime(), vehicle.getExpectedReturnTime());
-            return ResponseEntity.ok(orderResponse);
-        } catch (RazorpayException e) {
-            return ResponseEntity.status(500).body("Error creating payment order: " + e.getMessage());
-        }
+        return ResponseEntity.ok("Ride started successfully");
     }
-
-    @PostMapping("/{vehicleId}/confirm-ride")
-    public ResponseEntity<?> confirmRide(@PathVariable String vehicleId, @RequestParam String paymentId) {
-        Optional<Vehicle> vehicleOpt = vehicleRepository.findById(vehicleId);
-        if (vehicleOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body("Vehicle not found");
-        }
-
-        Vehicle vehicle = vehicleOpt.get();
-        if (vehicle.getStatus() != RentalStatus.PENDING_PAYMENT) {
-            return ResponseEntity.badRequest().body("Payment not completed. Cannot start ride.");
-        }
-
-        // 🔹 Verify Payment in Razorpay
-        boolean paymentVerified = paymentService.verifyPayment(paymentId);
-        if (!paymentVerified) {
-            return ResponseEntity.badRequest().body("Payment verification failed!");
-        }
-
-        vehicle.setStatus(RentalStatus.RENTED);
-        vehicleRepository.save(vehicle);
-
-        return ResponseEntity.ok("Ride started successfully!");
-    }
+//    @PostMapping("/{vehicleId}/request-ride")
+//    public ResponseEntity<ApiResponse<String>> requestRide(@PathVariable String vehicleId, Principal principal) {
+//        // 🔹 Get logged-in user email from authentication
+//        String userEmail = principal.getName();
+//
+//        Optional<Vehicle> vehicleOpt = vehicleRepository.findById(vehicleId);
+//        if (vehicleOpt.isEmpty()) {
+//            return ResponseEntity.badRequest()
+//                    .body(new ApiResponse<>(false, "Vehicle not found"));
+//        }
+//
+//        Vehicle vehicle = vehicleOpt.get();
+//        if (vehicle.getStatus() != RentalStatus.AVAILABLE) {
+//            return ResponseEntity.badRequest()
+//                    .body(new ApiResponse<>(false, "Vehicle is not available for rent"));
+//        }
+//
+//        vehicle.setStatus(RentalStatus.PENDING_PAYMENT);
+//        vehicle.setRideStartTime(LocalDateTime.now());
+//        vehicle.setExpectedReturnTime(LocalDateTime.now().plusHours(1));
+//        vehicleRepository.save(vehicle);
+//
+//        try {
+//            // 🔹 Call Razorpay Payment API
+//            String orderResponse = paymentService.createPaymentOrder(vehicle.getRideStartTime(), vehicle.getExpectedReturnTime());
+//            return ResponseEntity.ok(
+//                    new ApiResponse<>(true, orderResponse, "Payment order created successfully")
+//            );
+//        } catch (RazorpayException e) {
+//            return ResponseEntity.status(500)
+//                    .body(new ApiResponse<>(false, "Error creating payment order: " + e.getMessage()));
+//        }
+//    }
+//
+//    @PostMapping("/{vehicleId}/confirm-ride")
+//    public ResponseEntity<?> confirmRide(@PathVariable String vehicleId, @RequestParam String paymentId) {
+//        Optional<Vehicle> vehicleOpt = vehicleRepository.findById(vehicleId);
+//        if (vehicleOpt.isEmpty()) {
+//            return ResponseEntity.badRequest().body("Vehicle not found");
+//        }
+//
+//        Vehicle vehicle = vehicleOpt.get();
+//        if (vehicle.getStatus() != RentalStatus.PENDING_PAYMENT) {
+//            return ResponseEntity.badRequest().body("Payment not completed. Cannot start ride.");
+//        }
+//
+//        // 🔹 Verify Payment in Razorpay
+//        boolean paymentVerified = paymentService.verifyPayment(paymentId);
+//        if (!paymentVerified) {
+//            return ResponseEntity.badRequest().body("Payment verification failed!");
+//        }
+//
+//        vehicle.setStatus(RentalStatus.RENTED);
+//        vehicleRepository.save(vehicle);
+//
+//        return ResponseEntity.ok("Ride started successfully!");
+//    }
 
 
     // 🔹 End a Rental Ride (Must be within a Parking Zone)
