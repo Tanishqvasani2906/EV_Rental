@@ -9,6 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Optional;
+
 @Service
 public class RideService {
     @Autowired
@@ -54,4 +57,10 @@ public class RideService {
         return rideRepository.findById(rideId)
                 .orElseThrow(() -> new IllegalArgumentException("Ride not found"));
     }
+    public List<Ride> getRidesByUserId(String userId) {
+        List<Ride> rides = rideRepository.findByUserId(userId);
+        System.out.println("Fetched Rides: " + rides);
+        return rides;
+    }
+
 }

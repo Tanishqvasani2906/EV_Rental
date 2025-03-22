@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/rides")
 public class RideController {
@@ -27,6 +29,13 @@ public class RideController {
         Ride ride = rideService.endRide(rideId, rideRequest.getLatitude(), rideRequest.getLongitude());
         return ResponseEntity.ok(ride);
     }
+    // Get all rides of a user
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getRidesByUserId(@PathVariable String userId) {
+        List<Ride> rides = rideService.getRidesByUserId(userId);
+        return ResponseEntity.ok(rides);
+    }
+
 }
 
 // DTO for handling request body
