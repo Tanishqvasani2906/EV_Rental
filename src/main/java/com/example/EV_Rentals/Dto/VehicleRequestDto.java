@@ -9,7 +9,10 @@ public class VehicleRequestDto {
     private String type;
     private Double currentLatitude;
     private Double currentLongitude;
+    private Integer batteryPercentage;
     private String parkingZoneId;
+//    private String rideStartTime;
+//    private String expectedReturnTime;
 
     public Double getCurrentLatitude() {
         return currentLatitude;
@@ -41,5 +44,13 @@ public class VehicleRequestDto {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public Integer getBatteryPercentage() {
+        return batteryPercentage;
+    }
+
+    public void setBatteryPercentage(Integer batteryPercentage) {
+        this.batteryPercentage = batteryPercentage;
     }
 }

@@ -1,17 +1,21 @@
 package com.example.EV_Rentals.Controller;
 
 import com.example.EV_Rentals.Dto.VehicleRequestDto;
+import com.example.EV_Rentals.Entity.PenaltyHistory;
 import com.example.EV_Rentals.Entity.Vehicle;
 import com.example.EV_Rentals.Entity.ParkingZone;
 import com.example.EV_Rentals.Entity.RentalStatus;
 import com.example.EV_Rentals.Repository.ParkingZoneRepo;
+import com.example.EV_Rentals.Repository.PenaltyRepo;
 import com.example.EV_Rentals.Repository.VehicleRepo;
 
+import com.example.EV_Rentals.Service.PenaltyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +28,10 @@ public class VehicleController {
     private VehicleRepo vehicleRepository;
     @Autowired
     private ParkingZoneRepo parkingZoneRepository;
+    @Autowired
+    private PenaltyService penaltyService;
+    @Autowired
+    private PenaltyRepo penaltyHistoryRepo;
 
     // 🔹 1. Add a new vehicle (Needs a Parking Zone)
     @PostMapping("/addVehicle/{parkingZoneId}")
@@ -49,6 +57,7 @@ public class VehicleController {
         vehicle.setCurrentLongitude(requestDto.getCurrentLongitude());
         vehicle.setCurrentParkingZone(parkingZone);
         vehicle.setStatus(RentalStatus.AVAILABLE); // Default status
+        vehicle.setBatteryPercentage(requestDto.getBatteryPercentage());
 
         vehicleRepository.save(vehicle);
         return ResponseEntity.ok(vehicle);
@@ -106,6 +115,8 @@ public class VehicleController {
         }
 
         vehicle.setStatus(RentalStatus.RENTED);
+        vehicle.setRideStartTime(LocalDateTime.now());
+        vehicle.setExpectedReturnTime(vehicle.getExpectedReturnTime());
         vehicle.setCurrentParkingZone(null); // Remove from parking since it's being rented
         vehicleRepository.save(vehicle);
         return ResponseEntity.ok("Ride started successfully");
@@ -125,21 +136,41 @@ public class VehicleController {
         }
 
         Vehicle vehicle = vehicleOpt.get();
-        ParkingZone parkingZone = parkingZoneOpt.get();
+        vehicle.setActualReturnTime(LocalDateTime.now());
 
-        // Geofencing validation: Check if vehicle is within parking zone radius
-        double distance = calculateDistance(vehicle.getCurrentLatitude(), vehicle.getCurrentLongitude(),
-                parkingZone.getCenterLatitude(), parkingZone.getCenterLongitude());
+        // 🚨 Fix: Ensure expectedReturnTime is NOT null
+//        if (vehicle.getExpectedReturnTime() == null) {
+//            return ResponseEntity.badRequest().body("Error: Expected return time is missing for this ride.");
+//        }
+        // Ensure expected return time is set (e.g., 1 hour from now)
+        if (vehicle.getExpectedReturnTime() == null) {
+            vehicle.setExpectedReturnTime(LocalDateTime.now().plusHours(1));
+        }
 
-        if (distance > parkingZone.getRadius()) {
-            return ResponseEntity.badRequest().body("Vehicle must be parked inside the designated parking zone!");
+        // Calculate penalty
+        double penaltyAmount = penaltyService.calculatePenalty(vehicle);
+
+        // Save penalty if applicable
+        if (penaltyAmount > 0) {
+            PenaltyHistory penalty = new PenaltyHistory();
+            penalty.setVehicle(vehicle);
+            penalty.setPenaltyAmount(penaltyAmount);
+            penalty.setTimestamp(LocalDateTime.now());
+            penaltyHistoryRepo.save(penalty);
         }
 
         vehicle.setStatus(RentalStatus.RETURNED);
-        vehicle.setCurrentParkingZone(parkingZone);
+        vehicle.setCurrentParkingZone(parkingZoneOpt.get());
         vehicleRepository.save(vehicle);
-        return ResponseEntity.ok("Ride ended successfully");
+
+        return ResponseEntity.ok(
+                penaltyAmount > 0
+                        ? "Ride ended with a penalty of $" + penaltyAmount
+                        : "Ride ended successfully, no penalty applied."
+        );
     }
+
+
 
     // 🔹 Set a Vehicle as UNDER_MAINTENANCE
     @PutMapping("/{vehicleId}/maintenance")

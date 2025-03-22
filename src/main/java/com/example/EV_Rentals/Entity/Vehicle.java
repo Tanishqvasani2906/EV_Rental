@@ -2,6 +2,8 @@ package com.example.EV_Rentals.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 
 @Entity
 @Getter
@@ -29,6 +31,19 @@ public class Vehicle {
     @ManyToOne
     @JoinColumn(name = "parking_zone_id")
     private ParkingZone currentParkingZone; // Null if rented
+
+    @Column(name = "battery_percentage")
+    private Integer batteryPercentage; // Battery level (0-100)
+
+    @Column(name = "ride_start_time")
+    private LocalDateTime rideStartTime;  // Time when the ride starts
+
+    @Column(name = "expected_return_time")
+    private LocalDateTime expectedReturnTime;  // Expected return deadline
+
+    @Column(name = "actual_return_time")
+    private LocalDateTime actualReturnTime;  // When the user actually returns the vehicle
+
 
     public Double getCurrentLatitude() {
         return currentLatitude;
@@ -76,6 +91,38 @@ public class Vehicle {
 
     public void setVehicleId(String vehicleId) {
         this.vehicleId = vehicleId;
+    }
+
+    public Integer getBatteryPercentage() {
+        return batteryPercentage;
+    }
+
+    public void setBatteryPercentage(Integer batteryPercentage) {
+        this.batteryPercentage = batteryPercentage;
+    }
+
+    public LocalDateTime getActualReturnTime() {
+        return actualReturnTime;
+    }
+
+    public void setActualReturnTime(LocalDateTime actualReturnTime) {
+        this.actualReturnTime = actualReturnTime;
+    }
+
+    public LocalDateTime getExpectedReturnTime() {
+        return expectedReturnTime;
+    }
+
+    public void setExpectedReturnTime(LocalDateTime expectedReturnTime) {
+        this.expectedReturnTime = expectedReturnTime;
+    }
+
+    public LocalDateTime getRideStartTime() {
+        return rideStartTime;
+    }
+
+    public void setRideStartTime(LocalDateTime rideStartTime) {
+        this.rideStartTime = rideStartTime;
     }
 }
 

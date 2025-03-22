@@ -1,6 +1,7 @@
 package com.example.EV_Rentals.Controller;
 
 import com.example.EV_Rentals.Entity.ParkingZone;
+import com.example.EV_Rentals.Entity.Vehicle;
 import com.example.EV_Rentals.Repository.ParkingZoneRepo;
 import com.example.EV_Rentals.Repository.VehicleRepo;
 import org.springframework.http.HttpStatus;
@@ -102,5 +103,23 @@ public class ParkingZoneController {
                 String.format("Available slots: %d out of %d", availableSlots, parkingZone.getCapacity())
         );
     }
+    // 🔹 7. Get all Vehicles by Parking Zone ID
+    @GetMapping("/getVehiclesByPZId/{parkingZoneId}")
+    public ResponseEntity<?> getVehiclesByParkingZone(@PathVariable String parkingZoneId) {
+        Optional<ParkingZone> parkingZoneOpt = parkingZoneRepo.findById(parkingZoneId);
+
+        if (parkingZoneOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body("Parking Zone not found!");
+        }
+
+        List<Vehicle> vehicles = vehicleRepo.findByParkingZoneId(parkingZoneId);
+
+        if (vehicles.isEmpty()) {
+            return ResponseEntity.ok("No vehicles found in this parking zone.");
+        }
+
+        return ResponseEntity.ok(vehicles);
+    }
+
 }
 
