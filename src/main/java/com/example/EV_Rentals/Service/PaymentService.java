@@ -1,6 +1,7 @@
 package com.example.EV_Rentals.Service;
 
 import com.razorpay.Order;
+import com.razorpay.Payment;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import org.json.JSONObject;
@@ -27,7 +28,7 @@ public class PaymentService {
     }
 
     // 🔹 Create Razorpay Payment Order
-    public String createPaymentOrder(LocalDateTime startTime, LocalDateTime expectedReturnTime, String userEmail) throws RazorpayException {
+    public String createPaymentOrder(LocalDateTime startTime, LocalDateTime expectedReturnTime) throws RazorpayException {
         long rideDurationMinutes = Duration.between(startTime, expectedReturnTime).toMinutes();
 
         // 🔹 Define pricing (e.g., ₹2 per minute)
@@ -45,4 +46,14 @@ public class PaymentService {
 
         return order.toString(); // Return order details
     }
+
+    public boolean verifyPayment(String paymentId) {
+        try {
+            Payment payment = razorpayClient.Payments.fetch(paymentId); // ✅ Use the initialized `razorpayClient`
+            return "captured".equals(payment.get("status"));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }
