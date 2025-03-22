@@ -116,7 +116,7 @@ public class VehicleController {
 
         vehicle.setStatus(RentalStatus.RENTED);
         vehicle.setRideStartTime(LocalDateTime.now());
-        vehicle.setExpectedReturnTime(vehicle.getExpectedReturnTime());
+        vehicle.setExpectedReturnTime(LocalDateTime.now().plusHours(1));
         vehicle.setCurrentParkingZone(null); // Remove from parking since it's being rented
         vehicleRepository.save(vehicle);
         return ResponseEntity.ok("Ride started successfully");

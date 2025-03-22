@@ -18,10 +18,10 @@ public class Ride {
     @JoinColumn(name = "user_id", referencedColumnName = "user_id") // Assuming `User` entity exists
     private Users user;
 
-    @Column(name = "start_latitude",nullable = false)
+    @Column(name = "start_latitude")
     private double startLatitude;
 
-    @Column(name = "start_longitude",nullable = false)
+    @Column(name = "start_longitude")
     private double startLongitude;
 
     @Column(name = "end_latitude")
